@@ -14,14 +14,14 @@ class Game(db.Model, SerializerMixin):
     serialize_rules = ('-reviews.game',)
 
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String, unique=True)
-    genre = db.Column(db.String)
-    platform = db.Column(db.String)
-    price = db.Column(db.Integer)
+    title = db.Column(db.String, unique=True, nullable=False)
+    genre = db.Column(db.String, nullable=False)
+    platform = db.Column(db.String, nullable=False)
+    price = db.Column(db.Integer, nullable=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, onupdate=db.func.now())
 
-    reviews = db.relationship('Review', backref='game')
+    reviews = db.relationship('Review', backref='game', cascade="all, delete-orphan")
 
     def __repr__(self):
         return f'<Game {self.title} for {self.platform}>'
@@ -30,18 +30,18 @@ class Review(db.Model, SerializerMixin):
     __tablename__ = 'reviews'
 
     serialize_rules = ('-game.reviews', '-user.reviews',)
-    
+
     id = db.Column(db.Integer, primary_key=True)
-    score = db.Column(db.Integer)
-    comment = db.Column(db.String)
+    score = db.Column(db.Integer, nullable=False)
+    comment = db.Column(db.String, nullable=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, onupdate=db.func.now())
 
-    game_id = db.Column(db.Integer, db.ForeignKey('games.id'))
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    game_id = db.Column(db.Integer, db.ForeignKey('games.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
     def __repr__(self):
-        return f'<Review ({self.id}) of {self.game}: {self.score}/10>'
+        return f'<Review ({self.id}) of {self.game.title}: {self.score}/10>'
 
 class User(db.Model, SerializerMixin):
     __tablename__ = 'users'
@@ -49,9 +49,11 @@ class User(db.Model, SerializerMixin):
     serialize_rules = ('-reviews.user',)
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    
+    name = db.Column(db.String, unique=True, nullable=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, onupdate=db.func.now())
 
-    reviews = db.relationship('Review', backref='user')
+    reviews = db.relationship('Review', backref='user', cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f'<User {self.name}>'
